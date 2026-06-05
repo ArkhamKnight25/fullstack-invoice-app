@@ -26,3 +26,47 @@ export function Summary() {
       </div>
 
       <div className="metric-grid" style={{ marginBottom: 24 }}>
+        <div className="metric-card">
+          <p className="metric-label">Total billed</p>
+          <p className="metric-value">₹{fmt(data.totalBilled)}</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label">Total tax</p>
+          <p className="metric-value">₹{fmt(data.totalTax)}</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label"># Invoices</p>
+          <p className="metric-value">{data.invoiceCount.toLocaleString()}</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label"># Customers</p>
+          <p className="metric-value">{data.customerCount}</p>
+        </div>
+      </div>
+
+      <div className="card">
+        <p className="section-title">Top customers by value</p>
+        <div className="bar-chart">
+          {data.topCustomers.map((c) => (
+            <div key={c.name} className="bar-row">
+              <span
+                className="bar-label clickable"
+                onClick={() => navigate(`/customers/${encodeURIComponent(c.name)}`)}
+                title={c.name}
+              >
+                {c.name}
+              </span>
+              <div className="bar-track">
+                <div
+                  className="bar-fill"
+                  style={{ width: `${(c.totalValue / maxValue) * 100}%` }}
+                />
+              </div>
+              <span className="bar-value">₹{fmt(c.totalValue)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
