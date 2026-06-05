@@ -98,3 +98,99 @@ export function InvoiceList() {
           onChange={(e) => set({ issueDateTo: e.target.value || undefined })}
           style={{ minWidth: 140 }}
         />
+        <input
+          type="date"
+          title="Due date from"
+          value={filters.dueDateFrom ?? ''}
+          onChange={(e) => set({ dueDateFrom: e.target.value || undefined })}
+          style={{ minWidth: 140 }}
+        />
+        <input
+          type="date"
+          title="Due date to"
+          value={filters.dueDateTo ?? ''}
+          onChange={(e) => set({ dueDateTo: e.target.value || undefined })}
+          style={{ minWidth: 140 }}
+        />
+        {Object.values(filters).some(v => v && !['page','limit','sortBy','sortOrder'].includes(String(v))) && (
+          <button className="btn-secondary btn-sm" onClick={() => setFilters({ page: 1, limit: 20, sortBy: 'dueDate', sortOrder: 'asc' })}>
+            Clear
+          </button>
+        )}
+      </div>
+
+      <div className="card">
+        {isLoading && <p className="loading">Loading invoices…</p>}
+        {isError && <p className="error-msg">Failed to load invoices.</p>}
+        {!isLoading && !isError && (
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Invoice</th>
+                    <th>Customer</th>
+                    <th className="sortable" onClick={() => toggleSort('amount')}>
+                      Amount{sortIcon('amount')}
+                    </th>
+                    <th>Tax%</th>
+                    <th>Total</th>
+                    <th className="sortable" onClick={() => toggleSort('dueDate')}>
+                      Due{sortIcon('dueDate')}
+                    </th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.length === 0 && (
+                    <tr><td colSpan={8} className="empty">No invoices found.</td></tr>
+                  )}
+                  {invoices.map((inv) => (
+                    <tr key={inv._id}>
+                      <td style={{ fontFamily: 'monospace', fontSize: 13 }}>{inv.invoiceId}</td>
+                      <td>
+                        <span
+                          className="clickable"
+                          onClick={() => navigate(`/customers/${encodeURIComponent(inv.customerName)}`)}
+                        >
+                          {inv.customerName}
+                        </span>
+                      </td>
+                      <td>₹{fmt(inv.amount)}</td>
+                      <td>{inv.taxRate}%</td>
+                      <td>₹{fmt(inv.total)}</td>
+                      <td>{fmtDate(inv.dueDate)}</td>
+                      <td><StatusBadge status={inv.status} /></td>
+                      <td>
+                        <button
+                          className="btn-secondary btn-sm"
+                          onClick={() => { setEditInvoice(inv); setShowModal(true); }}
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="table-footer">
+              <span className="footer-count">
+                {total > 0 ? `Showing ${startRow}–${endRow} of ${total.toLocaleString()}` : 'No results'}
+              </span>
+              <Pagination page={page} totalPages={totalPages} onChange={(p) => set({ page: p })} />
+            </div>
+          </>
+        )}
+      </div>
+
+      {showModal && (
+        <InvoiceModal
+          existing={editInvoice}
+          onClose={() => { setShowModal(false); setEditInvoice(undefined); }}
+        />
+      )}
+    </div>
+  );
+}
