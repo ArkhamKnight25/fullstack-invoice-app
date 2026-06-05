@@ -53,3 +53,64 @@ export function CustomerProfile() {
       <div className="metric-grid">
         <div className="metric-card">
           <p className="metric-label">Total billed</p>
+          <p className="metric-value">₹{fmt(metrics.totalBilled)}</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label">Total tax</p>
+          <p className="metric-value">₹{fmt(metrics.totalTax)}</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label">Outstanding</p>
+          <p className="metric-value">₹{fmt(metrics.outstanding)}</p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label"># Invoices</p>
+          <p className="metric-value">{metrics.invoiceCount}</p>
+        </div>
+      </div>
+
+      <div className="status-chips">
+        {STATUS_CHIPS.map((s) => (
+          <button
+            key={s}
+            className={'chip' + (activeStatus === s ? ' active' : '')}
+            onClick={() => setActiveStatus(activeStatus === s ? null : s)}
+          >
+            {s} {metrics.byStatus[s] ?? 0}
+          </button>
+        ))}
+      </div>
+
+      <div className="card">
+        <p className="section-title">Invoice history</p>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Issued</th>
+                <th>Due</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr><td colSpan={5} className="empty">No invoices.</td></tr>
+              )}
+              {filtered.map((inv) => (
+                <tr key={inv._id}>
+                  <td style={{ fontFamily: 'monospace', fontSize: 13 }}>{inv.invoiceId}</td>
+                  <td>₹{fmt(inv.total)}</td>
+                  <td><StatusBadge status={inv.status} /></td>
+                  <td>{fmtDate(inv.issueDate)}</td>
+                  <td>{fmtDate(inv.dueDate)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
