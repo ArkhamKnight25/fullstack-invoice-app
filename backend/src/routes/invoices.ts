@@ -73,3 +73,88 @@ router.get('/', async (req: Request, res: Response) => {
 
     const [data, total] = await Promise.all([
       Invoice.find(filter)
+        .sort({ [sortField]: sortDir })
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum)
+        .lean(),
+      Invoice.countDocuments(filter),
+    ]);
+
+    res.json({
+      data,
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      sortBy: sortField,
+      sortOrder: sortDir === 1 ? 'asc' : 'desc',
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch invoices' });
+  }
+});
+
+// GET /api/invoices/:id
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const invoice = await Invoice.findOne({ invoiceId: req.params.id }).populate('customer', 'name company');
+    if (!invoice) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+    res.json(invoice);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch invoice' });
+  }
+});
+
+// POST /api/invoices — create
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    const { customer: customerRef, amount, taxRate, issueDate, dueDate, status } = req.body;
+
+    if (!customerRef || amount == null || taxRate == null || !issueDate || !dueDate || !status) {
+      res.status(400).json({ error: 'Missing required fields: customer, amount, taxRate, issueDate, dueDate, status' });
+      return;
+    }
+
+    const amountNum = parseFloat(amount);
+    const taxRateNum = parseInt(taxRate, 10);
+
+    if (isNaN(amountNum) || amountNum < 0) {
+      res.status(400).json({ error: 'amount must be a non-negative number' });
+      return;
+    }
+
+    if (![0, 3, 5, 18, 28].includes(taxRateNum)) {
+      res.status(400).json({ error: 'taxRate must be one of 0, 3, 5, 18, 28' });
+      return;
+    }
+
+    const validStatuses = ['Sent', 'Unpaid', 'Overdue', 'Paid', 'Void', 'Draft'];
+    if (!validStatuses.includes(status)) {
+      res.status(400).json({ error: `status must be one of ${validStatuses.join(', ')}` });
+      return;
+    }
+
+    // Resolve customer
+    let customerDoc;
+    if (mongoose.Types.ObjectId.isValid(customerRef)) {
+      customerDoc = await Customer.findById(customerRef);
+    } else {
+      customerDoc = await Customer.findOne({ name: { $regex: new RegExp(`^${customerRef}$`, 'i') } });
+    }
+
+    if (!customerDoc) {
+      res.status(404).json({ error: 'Customer not found' });
+      return;
+    }
+
+    const { tax, total } = computeTaxAndTotal(amountNum, taxRateNum);
+
+    // Generate unique invoiceId
+    let invoiceId = generateInvoiceId();
+    let attempts = 0;
+    while (await Invoice.exists({ invoiceId }) && attempts < 10) {
+      invoiceId = generateInvoiceId();
+      attempts++;
