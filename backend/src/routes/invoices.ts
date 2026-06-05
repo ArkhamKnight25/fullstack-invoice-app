@@ -158,3 +158,121 @@ router.post('/', async (req: Request, res: Response) => {
     while (await Invoice.exists({ invoiceId }) && attempts < 10) {
       invoiceId = generateInvoiceId();
       attempts++;
+    }
+
+    const invoice = await Invoice.create({
+      invoiceId,
+      customer: customerDoc._id,
+      customerName: customerDoc.name,
+      company: customerDoc.company,
+      amount: amountNum,
+      taxRate: taxRateNum as 0 | 3 | 5 | 18 | 28,
+      tax,
+      total,
+      status,
+      issueDate: new Date(issueDate),
+      dueDate: new Date(dueDate),
+    });
+
+    res.status(201).json(invoice);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create invoice' });
+  }
+});
+
+// PUT /api/invoices/:id — edit
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const existing = await Invoice.findOne({ invoiceId: req.params.id });
+    if (!existing) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+
+    const { customer: customerRef, amount, taxRate, issueDate, dueDate, status } = req.body;
+
+    const updates: Partial<IInvoice> = {};
+
+    // Resolve customer if changing
+    if (customerRef !== undefined) {
+      let customerDoc;
+      if (mongoose.Types.ObjectId.isValid(customerRef)) {
+        customerDoc = await Customer.findById(customerRef);
+      } else {
+        customerDoc = await Customer.findOne({ name: { $regex: new RegExp(`^${customerRef}$`, 'i') } });
+      }
+      if (!customerDoc) {
+        res.status(404).json({ error: 'Customer not found' });
+        return;
+      }
+      updates.customer = customerDoc._id as mongoose.Types.ObjectId;
+      updates.customerName = customerDoc.name;
+      updates.company = customerDoc.company;
+    }
+
+    if (amount !== undefined) {
+      const amountNum = parseFloat(amount);
+      if (isNaN(amountNum) || amountNum < 0) {
+        res.status(400).json({ error: 'amount must be a non-negative number' });
+        return;
+      }
+      updates.amount = amountNum;
+    }
+
+    if (taxRate !== undefined) {
+      const taxRateNum = parseInt(taxRate, 10);
+      if (![0, 3, 5, 18, 28].includes(taxRateNum)) {
+        res.status(400).json({ error: 'taxRate must be one of 0, 3, 5, 18, 28' });
+        return;
+      }
+      updates.taxRate = taxRateNum as 0 | 3 | 5 | 18 | 28;
+    }
+
+    if (status !== undefined) {
+      const validStatuses = ['Sent', 'Unpaid', 'Overdue', 'Paid', 'Void', 'Draft'];
+      if (!validStatuses.includes(status)) {
+        res.status(400).json({ error: `status must be one of ${validStatuses.join(', ')}` });
+        return;
+      }
+      updates.status = status;
+    }
+
+    if (issueDate !== undefined) updates.issueDate = new Date(issueDate);
+    if (dueDate !== undefined) updates.dueDate = new Date(dueDate);
+
+    // Always recompute tax/total from final amount + taxRate
+    const finalAmount = updates.amount ?? existing.amount;
+    const finalTaxRate = updates.taxRate ?? existing.taxRate;
+    const { tax, total } = computeTaxAndTotal(finalAmount, finalTaxRate);
+    updates.tax = tax;
+    updates.total = total;
+
+    const updated = await Invoice.findOneAndUpdate(
+      { invoiceId: req.params.id },
+      { $set: updates },
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update invoice' });
+  }
+});
+
+// DELETE /api/invoices/:id
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const deleted = await Invoice.findOneAndDelete({ invoiceId: req.params.id });
+    if (!deleted) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+    res.json({ message: 'Invoice deleted', invoiceId: req.params.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete invoice' });
+  }
+});
+
+export default router;
+
+
