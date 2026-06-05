@@ -48,3 +48,53 @@ export function InvoiceList() {
   function sortIcon(field: string) {
     if (filters.sortBy !== field) return ' ↕';
     return filters.sortOrder === 'asc' ? ' ↑' : ' ↓';
+  }
+
+  const invoices = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const page = data?.page ?? 1;
+  const totalPages = data?.totalPages ?? 1;
+  const startRow = (page - 1) * (filters.limit ?? 20) + 1;
+  const endRow = Math.min(page * (filters.limit ?? 20), total);
+
+  return (
+    <div className="page">
+      <div className="toolbar">
+        <span className="toolbar-title">Invoices</span>
+        <div className="toolbar-actions">
+          <button className="btn-secondary" onClick={() => navigate('/summary')}>Summary</button>
+          <button className="btn-primary" onClick={() => { setEditInvoice(undefined); setShowModal(true); }}>
+            + New invoice
+          </button>
+        </div>
+      </div>
+
+      <div className="filters">
+        <input
+          className="search-box"
+          placeholder="Search invoice / customer"
+          value={filters.search ?? ''}
+          onChange={(e) => set({ search: e.target.value })}
+        />
+        <select value={filters.status ?? ''} onChange={(e) => set({ status: e.target.value || undefined })}>
+          <option value="">All statuses</option>
+          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filters.taxRate ?? ''} onChange={(e) => set({ taxRate: e.target.value || undefined })}>
+          <option value="">All tax rates</option>
+          {TAX_OPTIONS.map((r) => <option key={r} value={r}>{r}%</option>)}
+        </select>
+        <input
+          type="date"
+          title="Issue date from"
+          value={filters.issueDateFrom ?? ''}
+          onChange={(e) => set({ issueDateFrom: e.target.value || undefined })}
+          style={{ minWidth: 140 }}
+        />
+        <input
+          type="date"
+          title="Issue date to"
+          value={filters.issueDateTo ?? ''}
+          onChange={(e) => set({ issueDateTo: e.target.value || undefined })}
+          style={{ minWidth: 140 }}
+        />
