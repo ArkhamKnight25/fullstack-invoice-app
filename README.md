@@ -269,3 +269,7 @@ Full contract: GET /api/invoices supports page limit sortBy sortOrder status tax
 ## Deployment
 
 Atlas (MongoDB) + Render (backend) + Vercel (frontend). See deployment section above.
+
+## Assumptions
+
+Outstanding = Sent + Unpaid + Overdue. invoiceId = INV- + 7 digits. Tax rounded to 2dp.
