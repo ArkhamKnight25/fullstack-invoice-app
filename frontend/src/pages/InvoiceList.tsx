@@ -98,7 +98,7 @@ export function InvoiceList() {
     setOpenFilter(null);
   }
 
-  const hasActiveFilters = !!(filters.status || filters.taxRate || filters.issueDateFrom || filters.issueDateTo || filters.dueDateFrom || filters.dueDateTo || filters.search);
+  const hasActiveFilters = !!(filters.status || filters.taxRate || filters.issueDateFrom || filters.issueDateTo || filters.search);
 
   const invoices = data?.data ?? [];
   const total = data?.total ?? 0;
@@ -107,7 +107,7 @@ export function InvoiceList() {
   const startRow = (page - 1) * (filters.limit ?? 20) + 1;
   const endRow = Math.min(page * (filters.limit ?? 20), total);
 
-  const dateActive = !!(filters.issueDateFrom || filters.issueDateTo || filters.dueDateFrom || filters.dueDateTo);
+  const dateActive = !!(filters.issueDateFrom || filters.issueDateTo);
 
   return (
     <div className="page">
@@ -194,20 +194,16 @@ export function InvoiceList() {
             Date{dateActive ? ' · set' : ''} ▾
           </button>
           {openFilter === 'date' && (
-            <div className="pill-dropdown" style={{ minWidth: 260, padding: 14 }}>
-              <div style={{ display: 'grid', gap: 8 }}>
-                <label className="form-label">Issue date from</label>
+            <div className="pill-dropdown" style={{ minWidth: 220, padding: 12 }}>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label className="form-label">From</label>
                 <input type="date" value={filters.issueDateFrom ?? ''} onChange={(e) => set({ issueDateFrom: e.target.value || undefined })} />
-                <label className="form-label">Issue date to</label>
+                <label className="form-label">To</label>
                 <input type="date" value={filters.issueDateTo ?? ''} onChange={(e) => set({ issueDateTo: e.target.value || undefined })} />
-                <label className="form-label">Due date from</label>
-                <input type="date" value={filters.dueDateFrom ?? ''} onChange={(e) => set({ dueDateFrom: e.target.value || undefined })} />
-                <label className="form-label">Due date to</label>
-                <input type="date" value={filters.dueDateTo ?? ''} onChange={(e) => set({ dueDateTo: e.target.value || undefined })} />
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                {dateActive && <button className="pill-clear" onClick={() => { set({ issueDateFrom: undefined, issueDateTo: undefined, dueDateFrom: undefined, dueDateTo: undefined }); }}>Clear dates</button>}
-                <button className="btn-primary btn-sm" onClick={() => setOpenFilter(null)}>Apply</button>
+                {dateActive && <button className="pill-clear" onClick={() => { set({ issueDateFrom: undefined, issueDateTo: undefined }); }}>Clear</button>}
+                <button className="btn-primary btn-sm" style={{ flex: 1 }} onClick={() => setOpenFilter(null)}>Apply</button>
               </div>
             </div>
           )}
