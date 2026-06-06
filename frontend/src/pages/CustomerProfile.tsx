@@ -5,7 +5,7 @@ import { fetchCustomerProfile } from '../api/client';
 import { StatusBadge } from '../components/StatusBadge';
 import type { InvoiceStatus } from '../types';
 
-const STATUS_CHIPS: InvoiceStatus[] = ['Paid', 'Unpaid', 'Overdue', 'Draft', 'Sent', 'Void'];
+const STATUS_CHIPS: InvoiceStatus[] = ['Paid', 'Unpaid', 'Overdue', 'Draft'];
 
 function fmt(n: number) {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -29,11 +29,16 @@ export function CustomerProfile() {
     enabled: !!idOrName,
   });
 
-  if (isLoading) return <div className="page"><p className="loading">Loading customer…</p></div>;
+  if (isLoading) return (
+    <div className="page">
+      <div className="metric-grid">
+        {[1,2,3,4].map(i => <div key={i} className="metric-card"><span className="skeleton" style={{ width: '60%', height: 32, display: 'block' }} /></div>)}
+      </div>
+    </div>
+  );
   if (isError || !data) return <div className="page"><p className="error-msg">Customer not found.</p></div>;
 
   const { customer, metrics, invoices } = data;
-
   const filtered = activeStatus ? invoices.filter((i) => i.status === activeStatus) : invoices;
 
   return (
@@ -76,7 +81,7 @@ export function CustomerProfile() {
             className={'chip' + (activeStatus === s ? ' active' : '')}
             onClick={() => setActiveStatus(activeStatus === s ? null : s)}
           >
-            {s} {metrics.byStatus[s] ?? 0}
+            {s} <span style={{ opacity: 0.7 }}>{metrics.byStatus[s] ?? 0}</span>
           </button>
         ))}
       </div>
@@ -91,20 +96,18 @@ export function CustomerProfile() {
                 <th>Total</th>
                 <th>Status</th>
                 <th>Issued</th>
-                <th>Due</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={5} className="empty">No invoices.</td></tr>
+                <tr><td colSpan={4} className="empty">No invoices{activeStatus ? ` with status "${activeStatus}"` : ''}.</td></tr>
               )}
               {filtered.map((inv) => (
-                <tr key={inv._id}>
+                <tr key={inv._id} style={inv.status === 'Overdue' ? { background: '#fff5f5' } : {}}>
                   <td style={{ fontFamily: 'monospace', fontSize: 13 }}>{inv.invoiceId}</td>
                   <td>₹{fmt(inv.total)}</td>
                   <td><StatusBadge status={inv.status} /></td>
                   <td>{fmtDate(inv.issueDate)}</td>
-                  <td>{fmtDate(inv.dueDate)}</td>
                 </tr>
               ))}
             </tbody>

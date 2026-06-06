@@ -141,7 +141,7 @@ tr:hover td { background: #f9fafb; }
 }
 .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
 .form-group { margin-bottom: 14px; }
-.form-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.form-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-footer-preview {
   background: var(--bg);
@@ -190,3 +190,74 @@ tr:hover td { background: #f9fafb; }
 .clickable { cursor: pointer; color: var(--primary); }
 .clickable:hover { text-decoration: underline; }
 .section-title { font-size: 14px; font-weight: 600; color: var(--primary); margin-bottom: 14px; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 4px;
+  height: 14px;
+  display: inline-block;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Filter pills */
+.pill-wrap { position: relative; }
+.filter-pill {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.filter-pill:hover { border-color: var(--primary); color: var(--primary); }
+.filter-pill.pill-active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pill-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 50;
+  min-width: 160px;
+  padding: 6px;
+}
+.pill-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.pill-option:hover { background: var(--bg); }
+.pill-option input[type="radio"] { accent-color: var(--primary); }
+.pill-clear {
+  width: 100%;
+  text-align: center;
+  padding: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  margin-top: 4px;
+}
+.pill-clear:hover { color: var(--primary); }
+
+/* Toast fade-in */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

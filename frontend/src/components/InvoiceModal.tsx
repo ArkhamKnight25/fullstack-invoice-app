@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchCustomers, createInvoice, updateInvoice } from '../api/client';
+import { fetchCustomers, createInvoice, updateInvoice, deleteInvoice } from '../api/client';
+import { useToast } from './Toast';
 import type { Invoice, InvoiceStatus, TaxRate } from '../types';
 
 interface Props {
@@ -21,6 +22,7 @@ function toDateInput(iso: string) {
 
 export function InvoiceModal({ onClose, existing }: Props) {
   const qc = useQueryClient();
+  const toast = useToast();
   const { data: customers = [] } = useQuery({ queryKey: ['customers'], queryFn: fetchCustomers });
 
   const [customerId, setCustomerId] = useState(existing?.customer ?? '');
@@ -31,15 +33,11 @@ export function InvoiceModal({ onClose, existing }: Props) {
   const [status, setStatus] = useState<InvoiceStatus>(existing?.status ?? 'Draft');
   const [error, setError] = useState('');
 
-  // Auto-fill company display
   const selectedCustomer = customers.find((c) => c._id === customerId);
-
-  // Live tax/total preview
   const amountNum = parseFloat(amount) || 0;
   const previewTax = Math.round(amountNum * taxRate) / 100;
   const previewTotal = Math.round((amountNum + previewTax) * 100) / 100;
 
-  // Pre-fill customer id when editing (customer field holds ObjectId)
   useEffect(() => {
     if (existing && customers.length > 0) {
       const match = customers.find((c) => c.name === existing.customerName);
@@ -54,6 +52,18 @@ export function InvoiceModal({ onClose, existing }: Props) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['invoices'] });
       qc.invalidateQueries({ queryKey: ['summary'] });
+      toast(existing ? 'Invoice updated' : 'Invoice created');
+      onClose();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteInvoice(existing!.invoiceId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: ['summary'] });
+      toast('Invoice deleted', 'error');
       onClose();
     },
     onError: (e: Error) => setError(e.message),
@@ -67,6 +77,12 @@ export function InvoiceModal({ onClose, existing }: Props) {
       return;
     }
     mutation.mutate({ customer: customerId, amount: amountNum, taxRate, issueDate, dueDate, status });
+  }
+
+  function handleDelete() {
+    if (confirm(`Delete ${existing!.invoiceId}? This cannot be undone.`)) {
+      deleteMutation.mutate();
+    }
   }
 
   return (
@@ -98,13 +114,8 @@ export function InvoiceModal({ onClose, existing }: Props) {
             <div className="form-group">
               <label className="form-label">Amount</label>
               <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
+                type="number" min="0" step="0.01" placeholder="0.00"
+                value={amount} onChange={(e) => setAmount(e.target.value)} required
               />
             </div>
             <div className="form-group">
@@ -142,6 +153,12 @@ export function InvoiceModal({ onClose, existing }: Props) {
           {error && <p className="error-msg" style={{ marginBottom: 12 }}>{error}</p>}
 
           <div className="modal-actions">
+            {existing && (
+              <button type="button" className="btn-danger btn-sm" onClick={handleDelete} disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+              </button>
+            )}
+            <div style={{ flex: 1 }} />
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={mutation.isPending}>
               {mutation.isPending ? 'Saving…' : 'Save invoice'}
