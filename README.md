@@ -265,3 +265,7 @@ Normalized two-collection model. Denormalized customerName on Invoice for read p
 ## API Reference
 
 Full contract: GET /api/invoices supports page limit sortBy sortOrder status taxRate search date ranges.
+
+## Deployment
+
+Atlas (MongoDB) + Render (backend) + Vercel (frontend). See deployment section above.
