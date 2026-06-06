@@ -257,3 +257,7 @@ Atlas (MongoDB) + Render (backend) + Vercel (frontend). See deployment section a
 ## Assumptions
 
 Outstanding = Sent + Unpaid + Overdue. invoiceId = INV- + 7 digits. Tax rounded to 2dp.
+
+## Data Modeling
+
+Normalized two-collection model. Denormalized customerName on Invoice for read performance.
