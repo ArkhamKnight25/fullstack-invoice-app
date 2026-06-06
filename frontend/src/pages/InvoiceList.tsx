@@ -14,13 +14,24 @@ function fmt(n: number) {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+const SKEL_WIDTHS = [
+  ['70%', '80%', '55%', '40%', '55%', '60%'],
+  ['65%', '90%', '50%', '40%', '50%', '60%'],
+  ['75%', '70%', '60%', '40%', '60%', '60%'],
+  ['60%', '85%', '45%', '40%', '45%', '60%'],
+  ['72%', '75%', '58%', '40%', '58%', '60%'],
+  ['68%', '88%', '52%', '40%', '52%', '60%'],
+  ['74%', '72%', '62%', '40%', '62%', '60%'],
+  ['63%', '82%', '48%', '40%', '48%', '60%'],
+];
+
 function SkeletonRows() {
   return (
     <>
-      {Array.from({ length: 8 }).map((_, i) => (
+      {SKEL_WIDTHS.map((cols, i) => (
         <tr key={i}>
-          {Array.from({ length: 6 }).map((_, j) => (
-            <td key={j}><span className="skeleton" style={{ width: `${60 + Math.random() * 40}%` }} /></td>
+          {cols.map((w, j) => (
+            <td key={j}><span className="skeleton" style={{ width: w }} /></td>
           ))}
         </tr>
       ))}
@@ -247,10 +258,16 @@ export function InvoiceList() {
                   <td>
                     <span
                       className="clickable"
+                      style={{ display: 'block', fontWeight: 500 }}
                       onClick={(e) => { e.stopPropagation(); navigate(`/customers/${encodeURIComponent(inv.customerName)}`); }}
                     >
                       {inv.customerName}
                     </span>
+                    {inv.company && (
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 1 }}>
+                        {inv.company}
+                      </span>
+                    )}
                   </td>
                   <td>₹{fmt(inv.amount)}</td>
                   <td>{inv.taxRate}%</td>

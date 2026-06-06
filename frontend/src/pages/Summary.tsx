@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { fetchSummary } from '../api/client';
+// useNavigate kept for customer profile navigation
 
 function fmt(n: number) {
   return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -20,11 +21,6 @@ export function Summary() {
 
   return (
     <div className="page">
-      <div className="toolbar">
-        <span className="toolbar-title">Summary / Analytics</span>
-        <button className="btn-secondary" onClick={() => navigate('/')}>← Back to invoices</button>
-      </div>
-
       <div className="metric-grid" style={{ marginBottom: 24 }}>
         <div className="metric-card">
           <p className="metric-label">Total billed</p>
