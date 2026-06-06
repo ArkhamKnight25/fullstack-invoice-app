@@ -261,3 +261,7 @@ Outstanding = Sent + Unpaid + Overdue. invoiceId = INV- + 7 digits. Tax rounded 
 ## Data Modeling
 
 Normalized two-collection model. Denormalized customerName on Invoice for read performance.
+
+## API Reference
+
+Full contract: GET /api/invoices supports page limit sortBy sortOrder status taxRate search date ranges.
