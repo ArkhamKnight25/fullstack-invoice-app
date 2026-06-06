@@ -54,7 +54,7 @@ export function InvoiceList() {
 
   // Debounced search
   useEffect(() => {
-    const t = setTimeout(() => set({ search: searchInput || undefined }), 300);
+    const t = setTimeout(() => set({ search: searchInput || undefined }), 150);
     return () => clearTimeout(t);
   }, [searchInput]);
 
@@ -92,6 +92,28 @@ export function InvoiceList() {
     return filters.sortOrder === 'asc' ? ' ↑' : ' ↓';
   }
 
+  function downloadCSV() {
+    const rows = data?.data ?? [];
+    if (!rows.length) return;
+    const headers = ['Invoice ID', 'Customer', 'Company', 'Amount', 'Tax Rate', 'Tax', 'Total', 'Status', 'Issue Date', 'Due Date'];
+    const escape = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [
+      headers.join(','),
+      ...rows.map((inv) => [
+        inv.invoiceId, inv.customerName, inv.company,
+        inv.amount, `${inv.taxRate}%`, inv.tax, inv.total,
+        inv.status, inv.issueDate.slice(0, 10), inv.dueDate.slice(0, 10),
+      ].map(escape).join(',')),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoices-page${data?.page ?? 1}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function clearAll() {
     setFilters({ page: 1, limit: 20, sortBy: 'dueDate', sortOrder: 'asc' });
     setSearchInput('');
@@ -115,6 +137,9 @@ export function InvoiceList() {
         <span className="toolbar-title">Invoices</span>
         <div className="toolbar-actions">
           <button className="btn-secondary" onClick={() => navigate('/summary')}>Summary</button>
+          <button className="btn-secondary" onClick={downloadCSV} disabled={!invoices.length} title="Download current page as CSV">
+            ↓ CSV
+          </button>
           <button className="btn-primary" onClick={() => { setEditInvoice(undefined); setShowModal(true); }}>
             + New invoice
           </button>
